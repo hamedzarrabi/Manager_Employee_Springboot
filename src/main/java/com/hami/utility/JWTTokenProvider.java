@@ -44,26 +44,16 @@ public class JWTTokenProvider {
         return stream(claims).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
-    private String[] getClaimsFromToken(String token) {
-        JWTVerifier verifier = getJWTVerifier();
-        return verifier.verify(token).getClaim(AUTHORITIES).asArray(String.class);
-    }
-
     public Authentication getAuthentication(String username, List<GrantedAuthority> authorities, HttpServletRequest request) {
         UsernamePasswordAuthenticationToken userPasswordAuthToken = new
                 UsernamePasswordAuthenticationToken(username, null, authorities);
-        userPasswordAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails((HttpServletRequest) request));
+        userPasswordAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         return userPasswordAuthToken;
     }
 
     public boolean isTokenValid(String username, String token) {
         JWTVerifier verifier = getJWTVerifier();
-        return StringUtils.isNotEmpty(username) && isTokenExpired(verifier, token);
-    }
-
-    private boolean isTokenExpired(JWTVerifier verifier, String token) {
-        Date expiration = verifier.verify(token).getExpiresAt();
-        return expiration.before(new Date());
+        return StringUtils.isNotEmpty(username) && !isTokenExpired(verifier, token);
     }
 
     public String getSubject(String token) {
@@ -71,20 +61,30 @@ public class JWTTokenProvider {
         return verifier.verify(token).getSubject();
     }
 
+    private boolean isTokenExpired(JWTVerifier verifier, String token) {
+        Date expiration = verifier.verify(token).getExpiresAt();
+        return expiration.before(new Date());
+    }
+
+    private String[] getClaimsFromToken(String token) {
+        JWTVerifier verifier = getJWTVerifier();
+        return verifier.verify(token).getClaim(AUTHORITIES).asArray(String.class);
+    }
+
     private JWTVerifier getJWTVerifier() {
         JWTVerifier verifier;
-        try{
+        try {
             Algorithm algorithm = HMAC512(secret);
             verifier = JWT.require(algorithm).withIssuer(GET_ARRAYS_LLC).build();
-        } catch (JWTVerificationException exception) {
+        }catch (JWTVerificationException exception) {
             throw new JWTVerificationException(TOKEN_CANNOT_BE_VERIFIED);
         }
         return verifier;
     }
 
-    private String[] getClaimsFromUser(UserPrincipal userPrincipal) {
+    private String[] getClaimsFromUser(UserPrincipal user) {
         List<String> authorities = new ArrayList<>();
-        for (GrantedAuthority grantedAuthority : userPrincipal.getAuthorities()) {
+        for (GrantedAuthority grantedAuthority : user.getAuthorities()){
             authorities.add(grantedAuthority.getAuthority());
         }
         return authorities.toArray(new String[0]);

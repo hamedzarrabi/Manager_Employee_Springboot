@@ -1,10 +1,11 @@
-package com.hami.exception.domain;
+package com.hami.exception;
 
 
 import com.hami.domain.HttpResponse;
 
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.hami.exception.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,9 +133,9 @@ public class ExceptionHandling implements ErrorController {
         return createHttpResponse(NOT_FOUND, "There is no mapping for this URL");
     }
 
-    public String getErrorPath() {
-        return ERROR_PATH;
-    }
+//    public String getErrorPath() {
+//        return ERROR_PATH;
+//    }
 
 
     private ResponseEntity<HttpResponse> createHttpResponse(HttpStatus httpStatus, String message) {
