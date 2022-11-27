@@ -39,7 +39,7 @@ public class JWTTokenProvider {
                 .sign(HMAC512(secret.getBytes()));
     }
 
-    List<GrantedAuthority> getAuthorities(String token) {
+    public List<GrantedAuthority> getAuthorities(String token) {
         String[] claims = getClaimsFromToken(token);
         return stream(claims).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
