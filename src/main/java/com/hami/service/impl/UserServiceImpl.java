@@ -5,6 +5,7 @@ import com.hami.domain.UserPrincipal;
 import com.hami.exception.domain.EmailExistException;
 import com.hami.exception.domain.UsernameExistException;
 import com.hami.repository.UserRepository;
+import com.hami.service.EmailService;
 import com.hami.service.LoginAttemptService;
 import com.hami.service.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -20,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.mail.MessagingException;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
@@ -39,17 +41,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
     private LoginAttemptService loginAttemptService;
+    private EmailService emailService;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, LoginAttemptService loginAttemptService) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, LoginAttemptService loginAttemptService, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
+        this.emailService = emailService;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
         User user = userRepository.findUserByUsername(username);
+
         if (user == null) {
             LOGGER.error(NO_USER_FOUND_BY_USERNAME + username);
             throw new UsernameNotFoundException(NO_USER_FOUND_BY_USERNAME + username);
@@ -113,10 +119,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public User register(String firstName, String lastName, String username, String email) throws EmailExistException, UsernameExistException {
+    public User register(String firstName, String lastName, String username, String email) throws EmailExistException, UsernameExistException, MessagingException {
 
-        validateNewUsernameAndEmail(StringUtils.EMPTY, username, email);
         User user = new User();
+        validateNewUsernameAndEmail(StringUtils.EMPTY, username, email);
 
         String password = generatePassword();
         String encodedPassword = encodedPassword(password);
@@ -136,6 +142,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         userRepository.save(user);
         LOGGER.info("New user password " + password);
+        emailService.sendNewPasswordEmail(firstName, password, email);
 
         return user;
     }
@@ -170,4 +177,5 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public User findUserByEmail(String email) {
         return userRepository.findUserByEmail(email);
     }
+
 }
