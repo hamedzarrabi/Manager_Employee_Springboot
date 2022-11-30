@@ -105,11 +105,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 throw new UsernameNotFoundException(NO_USER_FOUND_BY_USERNAME + currentUsername);
             }
 
-            if (userByNewUsername != null && currentUser.getId().equals(userByNewUsername.getId())) {
+            if (userByNewUsername != null && !currentUser.getId().equals(userByNewUsername.getId())) {
                 throw new UsernameExistException(USERNAME_ALREADY_EXISTS);
             }
 
-            if (userByNewEmail != null && currentUser.getId().equals(userByNewEmail.getId())) {
+            if (userByNewEmail != null && !currentUser.getId().equals(userByNewEmail.getId())) {
                 throw new EmailExistException(EMAIL_ALREADY_EXISTS);
             }
 
@@ -186,7 +186,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return user;
     }
     @Override
-    public User addNewUser(String firstName, String lastName, String username, String email, String role, boolean inNonLocked, boolean isActive, MultipartFile profileImage) throws EmailExistException, UsernameExistException, IOException {
+    public User addNewUser(String firstName, String lastName, String username, String email, String role, boolean isNonLocked, boolean isActive, MultipartFile profileImage) throws EmailExistException, UsernameExistException, IOException {
 
         validateNewUsernameAndEmail(EMPTY, username, email);
         User user = new User();
@@ -200,7 +200,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setEmail(email);
         user.setPassword(encodedPassword(password));
         user.setActive(isActive);
-        user.setNotLocked(inNonLocked);
+        user.setNotLocked(isNonLocked);
         user.setRole(getRoleEnumName(role).name());
         user.setAuthorities(getRoleEnumName(role).getAuthorities());
         user.setProfileImageUrl(getTemporaryProfileImageUrl(username));
@@ -211,7 +211,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return user;
     }
     @Override
-    public User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername, String newEmail, String role, boolean inNonLocked, boolean isActive, MultipartFile profileImage) throws EmailExistException, UsernameExistException, IOException {
+    public User updateUser(String currentUsername, String newFirstName, String newLastName, String newUsername, String newEmail, String role, boolean isNonLocked, boolean isActive, MultipartFile profileImage) throws EmailExistException, UsernameExistException, IOException {
 
         User currentUser = validateNewUsernameAndEmail(currentUsername, newUsername, newEmail);
 
@@ -221,7 +221,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         currentUser.setUsername(newUsername);
         currentUser.setEmail(newEmail);
         currentUser.setActive(isActive);
-        currentUser.setNotLocked(inNonLocked);
+        currentUser.setNotLocked(isNonLocked);
         currentUser.setRole(getRoleEnumName(role).name());
         currentUser.setAuthorities(getRoleEnumName(role).getAuthorities());
 
